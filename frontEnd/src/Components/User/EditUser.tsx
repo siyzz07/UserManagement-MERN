@@ -2,26 +2,29 @@ import React, { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup";
 import profilePhoto from "../../assets/blank-profile-picture-973460_1280.png";
+import { editUser } from "../../services/userAPI";
+import { toast } from "react-toastify";
 
-// Interface for form initial values
-interface initialValuesInterface {
+interface InitialValuesInterface {
   name: string;
   email: string;
-  profile: File | null;
+  profileImage: File | null;
 }
 
-const EditUser = ({ user }: any) => {
-  // State setup for image preview and filename
-  const [previewImage, setPreviewImage] = useState<any>(null);
+const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 
-  // Set initial values for the form, prefilled with user data passed via props
-  const initialValues: initialValuesInterface = {
+const EditUser = ({ user, closePopup,refetch}: any) => {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>("No file chosen");
+  const [prevProfile, setPrevProfile] = useState<string>("");
+
+  const initialValues: InitialValuesInterface = {
     name: user ? user.name : "",
     email: user ? user.email : "",
-    profile: null, // File input is initially null
+    profileImage: null, 
   };
 
-  // Validation schema using Yup
+  // Validation schema
   const validationSchema = yup.object({
     name: yup
       .string()
@@ -31,142 +34,215 @@ const EditUser = ({ user }: any) => {
       .string()
       .required("Email is required")
       .email("Enter a valid email"),
-    profile: yup
+    profileImage: yup
       .mixed()
-      .required("Image is required")
       .test(
         "fileType",
         "Only image files are allowed (jpeg, png, jpg)",
         (value: any) => {
-          if (!value) return false;
-          const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
-          return allowedTypes.includes(value.type);
+         
+          if (!value && prevProfile !== "No file chosen") {
+            return true; 
+          }
+
+          if (value && !ALLOWED_FILE_TYPES.includes(value?.type)) {
+            return false;
+          }
+
+          return true;
         }
-      ),
+      )
+      .nullable(), 
   });
+  const handleFormSubmit = async (values: InitialValuesInterface) => {
+    const formData = new FormData();
+    formData.append("name", values.name);
+    formData.append("email", values.email);
 
-  // Form submit handler
-  const handleFormSubmit = async (values: initialValuesInterface) => {
-    console.log(values); // Replace with your API call or desired logic
+    if (values.profileImage) {
+      
+      formData.append("profileImage", values.profileImage);
+    } else if (prevProfile && prevProfile !== "No file chosen") {
+      
+      formData.append("profileImage", prevProfile);
+    }
+
+    console.log("Form submitted:", {
+      name: values.name,
+      email: values.email,
+      profileImage: values.profileImage ? "New file" : prevProfile,
+    });
+
+
+    
+    try {
+      const token=localStorage.getItem("token")
+      
+     const response=await editUser({
+        headers:{Authorization:`Bearer ${token}`}
+     },formData)
+    
+     if(response){
+      toast.success(response.message)
+      closePopup()
+      refetch()
+     }
+
+    } catch (error) {
+      console.error("Error submitting the form:", error);
+    }
   };
 
-  // Handle file selection and update the preview image and filename
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, setFieldValue: any) => {
-    const file = event.currentTarget.files ? event.currentTarget.files[0] : null;
-    setFieldValue("profile", file);
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setFieldValue: any
+  ) => {
+    const file = event.target.files ? event.target.files[0] : null;
 
-    if (file) {
-      // Create a preview URL for the image
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewImage(previewUrl); // Update the preview image
-    } else {
-      // Reset preview if no file is selected
+    if (file && ALLOWED_FILE_TYPES.includes(file.type)) {
+      setFieldValue("profileImage", file); 
+      setFileName(file.name);
+      setPreviewImage(URL.createObjectURL(file));
+    } else if (file) {
+      alert("Unsupported file type. Please upload a jpeg, png, or jpg image.");
+      setFileName("No file chosen");
       setPreviewImage(null);
+      setFieldValue("profileImage", null); 
+    } else {
+     
     }
   };
 
-  // Effect hook to set the initial image preview if the user already has a profile image
   useEffect(() => {
-    if (user.profileImage) {
-      setPreviewImage(user.profileImage); // Use the user’s current image if available
+    console.log("5");
+    if (user?.profileImage) {
+      console.log("4");
+      const isString = typeof user.profileImage === "string";
+      setFileName(
+        isString ? user.profileImage.split("/").pop() : "No file chosen"
+      );
+      setPrevProfile(
+        isString ? user.profileImage.split("/").pop() : "No file chosen"
+      );
+      setPreviewImage(
+        isString
+          ? `http://localhost:3000${user.profileImage}` 
+          : URL.createObjectURL(user.profileImage) 
+      );
     }
-  }, [user.profileImage]);
+  }, [user]);
+
+ ;
 
   return (
-    <div>
-      <div
-        className="relative z-10"
-        aria-labelledby="modal-title"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div
-          className="fixed inset-0 bg-gray-500/75 transition-opacity"
-          aria-hidden="true"
-        ></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#272222da]">
+      <div className="relative w-full max-w-4xl p-6 bg-white rounded-lg shadow-lg sm:my-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-700">Edit Profile</h2>
+          <p
+            onClick={closePopup}
+            onKeyDown={(e) => e.key === "Enter" && closePopup()}
+            role="button"
+            tabIndex={0}
+            className="text-end font-semibold text-gray-700 text-lg cursor-pointer"
+          >
+            X
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-6">
+          <div className="flex flex-col items-center justify-center w-full sm:w-1/2 bg-gray-100 p-6 rounded-lg">
+            <img
+              src={previewImage || profilePhoto}
+              alt="Profile Preview"
+              className="w-36 h-36 rounded-full object-cover shadow-md mb-4"
+            />
+            <p className="text-sm text-gray-500">
+              Upload a new profile picture if you’d like to update it.
+            </p>
+            <p className="text-sm text-gray-700">{fileName}</p>
+          </div>
 
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-screen items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl h-[500px] sm:h-[500px]">
-              <div className="w-full h-10 bg-amber-400 text-center mt-4 text-3xl">
-                <p>Edit Profile</p>
-              </div>
-              <div className="w-full h-full bg-fuchsia-200 flex">
-                <div className="w-1/2 h-full bg-amber-400">
-                  {previewImage ? (
-                    <img
-                      src={previewImage}
-                      alt="Profile"
-                      className="w-36 h-36 rounded-full object-cover"
+          <div className="w-full sm:w-1/2">
+            <Formik
+              initialValues={initialValues}
+              validationSchema={validationSchema}
+              onSubmit={handleFormSubmit}
+            >
+              {({ setFieldValue }) => (
+                <Form className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-gray-700 font-medium"
+                    >
+                      Name
+                    </label>
+                    <Field
+                      id="name"
+                      name="name"
+                      type="text"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none"
+                      placeholder="Enter your name"
                     />
-                  ) : (
-                    <img
-                      src={profilePhoto}
-                      alt="Default Profile"
-                      className="w-36 h-36 rounded-full object-cover"
+                    <ErrorMessage
+                      name="name"
+                      component="div"
+                      className="text-sm text-red-500 mt-1"
                     />
-                  )}
-                </div>
-                <div className="w-1/2 h-full bg-amber-800 flex flex-col">
-                  <Formik
-                    initialValues={initialValues}
-                    validationSchema={validationSchema}
-                    onSubmit={handleFormSubmit}
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-gray-700 font-medium"
+                    >
+                      Email
+                    </label>
+                    <Field
+                      id="email"
+                      name="email"
+                      type="email"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none"
+                      placeholder="Enter your email"
+                      readOnly
+                    />
+                    <ErrorMessage
+                      name="email"
+                      component="div"
+                      className="text-sm text-red-500 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      id="profileImage"
+                      name="profileImage"
+                      type="file"
+                      className="hidden"
+                      onChange={(event) =>
+                        handleFileChange(event, setFieldValue)
+                      }
+                    />
+                    <label
+                      htmlFor="profileImage"
+                      className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 bg-gray-100 border border-gray-300 rounded-lg cursor-pointer"
+                    >
+                      <span>{fileName}</span>
+                      <span className="text-blue-500">Choose File</span>
+                    </label>
+                    <ErrorMessage
+                      name="profileImage"
+                      component="div"
+                      className="text-sm text-red-500 mt-1"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full py-3 text-white bg-[#30c1ff] rounded-lg hover:bg-[#6ad5e6] cursor-pointer transition-all"
                   >
-                    {({ setFieldValue }) => (
-                      <Form>
-                        <Field
-                          name="name"
-                          className="border-2 w-full h-11 mt-6 pl-4"
-                          type="text"
-                          placeholder="Name"
-                        />
-                        <ErrorMessage
-                          name="name"
-                          component="div"
-                          className="text-red-500 text-sm pl-4"
-                        />
-
-                        <Field
-                          name="email"
-                          className="border-2 w-full h-11 mt-6 pl-4"
-                          type="text"
-                          placeholder="Email"
-                        />
-                        <ErrorMessage
-                          name="email"
-                          component="div"
-                          className="text-red-500 text-sm"
-                        />
-
-                        <div className="relative">
-                          <Field
-                            name="profile"
-                            type="file"
-                            className="border-2 w-full h-11 mt-6 pl-4"
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                              handleFileChange(event, setFieldValue)
-                            }
-                          />
-                        </div>
-                        <ErrorMessage
-                          name="profile"
-                          component="div"
-                          className="text-red-500 text-sm"
-                        />
-
-                        <button
-                          type="submit"
-                          className="bg-blue-500 text-white px-4 py-2 mt-6 rounded"
-                        >
-                          Submit
-                        </button>
-                      </Form>
-                    )}
-                  </Formik>
-                </div>
-              </div>
-            </div>
+                    Update Profile
+                  </button>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       </div>

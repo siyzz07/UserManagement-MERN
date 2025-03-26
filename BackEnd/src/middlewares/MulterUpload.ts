@@ -10,15 +10,30 @@ const storage = multer.diskStorage({
   },
 });
 
+// const fileFilter = (
+//   req: Express.Request,
+//   file: Express.Multer.File,
+//   cb: multer.FileFilterCallback
+// ) => {
+//   console.log('file', file)
+//   if (file.mimetype.startsWith("image/")) {
+//     cb(null, true);
+//   } else {
+//     cb(new Error("only images are possible"));
+//   }
+// };
+
 const fileFilter = (
   req: Express.Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  if (file.mimetype.startsWith("image/")) {
+  if (!file) {
+    cb(null, true);
+  } else if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
-    cb(new Error("only images are possible"));
+    cb(null, true);
   }
 };
 

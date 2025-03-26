@@ -31,8 +31,7 @@ const Login = () => {
   };
 
   const handleSubmit = async(values: InitialVal) => {
-    console.log(values);
-
+    
   
   
     try {

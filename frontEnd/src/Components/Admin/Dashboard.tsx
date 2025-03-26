@@ -5,6 +5,7 @@ import Adduser from "./Adduser";
 import { fetchUserData } from "../../services/adminApi";
 
 
+
 interface User {
   name: string;
   email: string;
@@ -16,6 +17,12 @@ const Dashboard = () => {
   const [addUserPopup, setAddUserPopup] = useState<Boolean>();
   const [usersData,setUsersData]=useState<User[]>()
   const [searchQuery, setSearchQuery] = useState("");
+
+
+
+
+
+
 useEffect(()=>{
   fetchUser()
 },[])
@@ -42,9 +49,11 @@ useEffect(()=>{
       userData.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       userData.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+ 
   return (
     <div>
-
+      
       {addUserPopup && <Adduser closePopup={closeAdduserPopup} refetch={fetchUser} />}
 
       <div className="w-full mt-5 h-screen bg-gradient-to-b from-[#242424] to-white flex flex-col items-center justify-start">

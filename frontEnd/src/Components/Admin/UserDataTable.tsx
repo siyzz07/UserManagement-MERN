@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { deleteUser } from "../../services/adminApi";
+import Edituser from "./EdituserbyAdmin";
+
 
 interface User {
   name: string;
@@ -16,9 +18,14 @@ interface UserDataTableProps {
 }
 
 const UserDataTable = ({ users, refetch }: UserDataTableProps) => {
+
+    const [editUserPopup,setEditUserPopup]=useState<Boolean>(false)
+    const  [userDetails,setUserDetails]=useState<User|null>(null)
+
+
   const handleDeleteUser = async (user: User) => {
     try {
-      console.log("user", user);
+      
       const token = localStorage.getItem("adminToken");
       const request: any = await deleteUser(
         {
@@ -34,12 +41,19 @@ const UserDataTable = ({ users, refetch }: UserDataTableProps) => {
   };
 
   
-
+  const handleEditUse=(user:User)=>{
+    setEditUserPopup(!editUserPopup)
+    setUserDetails(user)
+    }
+  
 
   return (
+
     <div>
       <div>
         <div>
+          {editUserPopup && <Edituser popup={()=>setEditUserPopup(false)}  user={userDetails} refetch={refetch}/>}
+
           <table className="border-collapse border border-gray-400 w-full text-left">
             <thead>
               <tr className="bg-gray-200">
@@ -52,7 +66,7 @@ const UserDataTable = ({ users, refetch }: UserDataTableProps) => {
             <tbody>
               {users?.map((user: User) => (
                 <tr key={user._id}>
-                  {" "}
+              
                   {/* Add a unique key */}
                   <td className="border border-gray-400 px-4 py-2">
                     {user.name}
@@ -65,7 +79,7 @@ const UserDataTable = ({ users, refetch }: UserDataTableProps) => {
                     {user.isActive?"Active":"Inactive"}
                   </td>
                   <td className="border border-gray-400 px-4 py-2">
-                    <button className="bg-blue-500 text-white px-2 py-1 rounded">
+                    <button onClick={()=>handleEditUse(user)} className="bg-blue-500 text-white px-2 py-1 rounded">
                       Edit
                     </button>
 

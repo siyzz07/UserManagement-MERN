@@ -24,10 +24,21 @@ export const fetchUserData = async (value: object): Promise<any> => {
 // delet user api
 export const deleteUser=async (value:any,user:any):Promise<void>=>{
   
-  
-  console.log('user._id', user._id)
-  
   const request=await API.delete(`/admin/deleteuser/${user._id}`,value)
   return request.data
   
 }
+
+
+// edit uesr 
+
+export const  editUserby=async(token:object,values:any):Promise<any>=>{
+
+  
+  const response =await API.post('/admin/edituser',values,token)
+  return response.data
+  
+
+}
+
+

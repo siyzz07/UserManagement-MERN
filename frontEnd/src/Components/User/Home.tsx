@@ -15,13 +15,14 @@ interface ueserData {
 }
 
 const Home = () => {
-  const dispatch=useDispatch()
+  const dispatch = useDispatch();
   const [userData, setUserData] = useState<ueserData | undefined>();
   const [popupEdit, setPopup] = useState<boolean>(false);
   const naviage = useNavigate();
   useEffect(() => {
     fetchUser();
   }, []);
+
   // fuction to fetch the uer data
   const fetchUser = async () => {
     try {
@@ -32,19 +33,12 @@ const Home = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log(respose, "response from home");
-
       if (respose) {
-        ;
-        
-
         if (!respose.isActive) {
-          console.log("is not active");
-          
           localStorage.removeItem("token");
-          dispatch(logout())
+          dispatch(logout());
           // fetchUser()
-          naviage('/')
+          naviage("/");
           console.log(
             "Token removed from local storage as the user is inactive."
           );
@@ -52,11 +46,9 @@ const Home = () => {
           setUserData(respose);
         }
       } else {
-        console.log("hii");
         naviage("/");
       }
     } catch (error: any) {
-      console.log("lllllllllllllllllllll");
       // naviage('/')
       console.log(error.message);
     }
@@ -68,7 +60,9 @@ const Home = () => {
 
   return (
     <div>
-      {popupEdit && <EditUser user={userData || undefined} />}
+      {popupEdit && (
+        <EditUser user={userData || undefined} closePopup={handlePopup} refetch={fetchUser} />
+      )}
       <div className="w-full mt-6 h-screen bg-gradient-to-b from-[#32c2ff] to-white flex items-center justify-center">
         {/* Main Card Container */}
         <div className="w-full h-full 2xl:w-2/4 xl:w-2/4 lg:w-2/4 xl:h-2/4 lg:h-2/4 2xl:h-2/4 bg-white flex flex-col sm:flex-row shadow-2xl shadow-black rounded-xl">

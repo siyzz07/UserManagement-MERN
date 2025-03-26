@@ -4,7 +4,7 @@ import mongoose, { Document, Schema, Model } from "mongoose";
 interface IUserRegister extends Document {
   name: string;
   email: string;
-  profileImage: object;
+  profileImage: string;
   password: string;
   createdAt: Date;
   isActive:Boolean;
@@ -23,7 +23,7 @@ const userSchema: Schema<IUserRegister> = new mongoose.Schema({
  
   },
   profileImage: {
-    type: Object,
+    type: String,
     required: true,
   },
   password: {

@@ -60,7 +60,7 @@ const Register: React.FC = () => {
     formData.append("password", values.password);
     if (values.profile) formData.append("profile", values.profile);
 
-    console.log(formData);
+  
     
     // Log form data before sending
     // for (let pair of formData.entries()) {
@@ -143,7 +143,7 @@ const Register: React.FC = () => {
                     className="border-b-2 h-10 w-full focus:outline-none focus:border-[#2bbedf]"
                     onChange={(event) => {
                       const file = event.currentTarget.files?.[0] || null;
-                      console.log(file);
+                     
                       setFieldValue("profile", file);
                     }}
                   />

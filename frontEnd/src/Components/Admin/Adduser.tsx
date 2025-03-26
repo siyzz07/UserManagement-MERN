@@ -105,7 +105,7 @@ const Adduser :React.FC<UserDataTableProps>  =({closePopup,refetch})=> {
         aria-labelledby="modal-title"
         aria-modal="true"
       >
-        <div className="bg-gradient-to-b from-[#464646] to-white w-full max-w-lg p-6 rounded-lg shadow-lg">
+        <div className="bg-gradient-to-b from-gray-700 to-white w-full max-w-lg p-6 rounded-lg shadow-lg">
           
           <div className="flex w-full flex-row items-center justify-between">
             <h1 className="font-semibold text-2xl text-center flex-1">

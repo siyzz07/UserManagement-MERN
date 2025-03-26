@@ -77,3 +77,37 @@ export const deleteUser = async (
     res.status(500).json({ message: "internal server error" });
   }
 };
+
+
+
+//--------------------------- EDIT USER ----------------------------------------
+ export const adminEditUser=async(req:Request,res:Response):Promise<void>=>{
+
+    try{
+
+        const {name,email}=req.body
+
+    const user=await User.findOne({email:email})
+
+    if(!user){
+        res.status(404).json({ message: "User not found" });
+        return; 
+    }
+
+    user.name=name
+    user.save()
+    res.status(200).json({
+        message: "User updated successfully",
+        user: {
+          name: user.name,
+          email: user.email,
+          profileImage: user.profileImage,
+        },
+      });
+    }catch(error:any){
+        console.log(error.message);
+        
+    }
+    
+    
+ }
